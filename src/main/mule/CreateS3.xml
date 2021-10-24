@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="b1d618c9-bb4c-4949-84b1-4650b06d1821" >
+		<s3:basic-connection accessKey="AKIAYEQYNTXCOKTGPTPM" secretKey="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" region="US_EAST_2"/>
+	</s3:config>
+	<flow name="CreateS3Flow" doc:id="2763ade6-b8eb-468b-ad7d-7ec5161b4c89" >
+		<http:listener doc:name="Listener" doc:id="eebe6d88-37e8-4992-900d-8fc14773c5d5" config-ref="HTTP_Listener_config" path="/CreateS3"/>
+		<ee:transform doc:name="Transform Message" doc:id="aa225cd2-f94c-48a9-91f0-5ac7c372b3f0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="2ebfc80c-c225-4678-8704-16b3e511697c" >
+			<when expression='#[payload.Type == "Create"]'>
+				<try doc:name="Try" doc:id="309e2446-5ba7-4ec0-885f-2dcdfda787ba">
+			<s3:create-bucket doc:name="Create bucket" doc:id="ca899525-2982-4bd0-9ded-e666ea010fa9" config-ref="Amazon_S3_Configuration" bucketName="mytestbucket1464" />
+			<error-handler>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="0ec2f0b8-c1a6-45d5-9081-78e15d7aae76" type="ANY">
+					<logger level="INFO" doc:name="Logger" doc:id="f168add6-3150-43a6-af17-e6d6f6dc877e" message='#["Connection Problem"]' />
+				</on-error-propagate>
+			</error-handler>
+		</try>
+				<ee:transform doc:name="Transform Message" doc:id="042a8f4a-dd35-4061-801a-f7f334206018">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<s3:create-object doc:name="Create object" doc:id="b2314ad9-3d41-42d6-a54f-04eeaf5973d9" config-ref="Amazon_S3_Configuration" bucketName="mytestbucket1464" key="myFileofPayload.txt" />
+			</when>
+			<otherwise >
+				<s3:delete-bucket doc:name="Delete bucket" doc:id="ff2a719c-1b53-43a3-9083-699393267d7e" config-ref="Amazon_S3_Configuration" bucketName="mytestbucket1464"/>
+				<ee:transform doc:name="Transform Message" doc:id="690b132e-5faf-4214-a867-6ded77513d16" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"Successfully Deleted"
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

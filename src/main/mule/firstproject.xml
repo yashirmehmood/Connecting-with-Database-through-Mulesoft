@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a1537ea1-b2e5-4806-b41e-4a2a643c489a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="7fb61d15-4921-477e-8643-3f6540e9d1b8" >
+		<salesforce:config-with-oauth-connection >
+			<salesforce:oauth-authorization-code consumerKey="3MVG9fe4g9fhX0E4sb80FSTMF2Q9mLCjHY3xMMk94JC1nuJgqxaSPGeElfY5tGWfzP_AYicg_YPJv1kSUH_k6" consumerSecret="64CF839ED7F8D90C58962C242F7CDF0F25DEA23CCD0BFAEF508BAF28A03BACFB" authorizationUrl="https://absologix3-dev-ed.my.salesforce.com/services/oauth2/authorize" accessTokenUrl="https://absologix3-dev-ed.my.salesforce.com/services/oauth2/token"/>
+			<salesforce:oauth-callback-config listenerConfig="HTTP_Listener_config" callbackPath="/callback" authorizePath="/authorize" externalCallbackUrl="http://localhost:8081/callback" />
+		</salesforce:config-with-oauth-connection>
+	</salesforce:sfdc-config>
+	<flow name="firstprojectFlow" doc:id="38b1c6f4-5dc8-49fc-9ffc-5d6466a4372d" >
+		<http:listener doc:name="Listener" doc:id="eb489766-baea-4437-96de-efc6a57ab143" config-ref="HTTP_Listener_config" path="/accounts"/>
+		<logger level="INFO" doc:name="BeforeQuery" doc:id="ca4d13e8-baf6-4f32-b8ac-c437f78873d0" message='#["Before Query Execute"]'/>
+		<salesforce:query doc:name="Query" doc:id="f4230055-5913-43cf-9cce-f7178fa9d020" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[Select name from Account limit 10]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<logger level="INFO" doc:name="AfterQuery" doc:id="520c951c-1f22-4d26-bdee-d068e02c11aa" message='#["After Query Execute"]'/>
+		<ee:transform doc:name="Transform Message" doc:id="be65f606-2607-480c-9c59-5b620e9f851c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Successull Completion" doc:id="163e65ed-a98e-499a-92cc-3a441cfe029b" message='#["Successfully Completed Transmition"]'/>
+	</flow>
+</mule>

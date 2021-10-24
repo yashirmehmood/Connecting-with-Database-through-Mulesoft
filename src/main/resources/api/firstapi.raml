@@ -1,0 +1,35 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/cf860a8b-e481-4b37-9104-d346ada0b918 #
+title: FirstAPI
+
+types:
+  bodyParams: !include examples/newsdataType.raml
+  
+/search:
+  get:
+    queryParameters:
+      keyword:
+        description: this is for query paramaters which the request is accpeted
+        type: string
+        required: true
+        minLength: 3
+        maxLength: 10
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/fisrtApiExamples.raml
+/news:
+  post:
+    queryParameters:
+      country:
+        required: false
+    body:
+      application/json:
+        type: bodyParams
+    responses:
+      200:
+        body:
+          application/json:
+            example: !include examples/fisrtApiExamples.raml
+    
